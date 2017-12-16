@@ -15,11 +15,13 @@
   var ignoreTags = [{
     tag: 'repost', // wer mag schon reposts?
     downvote: true, // automatisch runter Voten?
+    skip: false, //überspringen
     confidenceThreshold: 0.85 // ab welcher confidence ( > mehr upvots < weniger )
   }, {
     tag: 'Wichteln 2017', // ¯\_(ツ)_/¯
     downvote: false, // muss nicht sein
-    confidenceThreshold: 0.5 // ab welcher confidence
+    skip: true,
+    confidenceThreshold: 0.2 // ab welcher confidence
   }];
 
   var base = 'https://pr0gramm.com/api/items/info?itemId=';
@@ -28,7 +30,7 @@
 
     $(function () {
 
-      var bodyList = document.querySelector("body")
+      var bodyList = document.querySelector("body");
       var observer = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
           if (oldHref != document.location.href) {
@@ -56,18 +58,20 @@
             if (res && res.tags && res.tags.length) {
               res.tags.map(function (tag) {
                 ignoreTags.map(function (ignore) {
-                  if (tag.tag == ignore.tag && tag.confidence >= ignore.confidenceThreshold) {
+                  if (String(tag.tag).toLowerCase() == ignore.tag.toLowerCase() && tag.confidence >= ignore.confidenceThreshold) {
                     if (ignore.downvote) {
                       !$('.item-vote')
                         .hasClass('voted-down') && $('.item-vote .vote-down:visible')
                         .click()
                         .length
                     }
-                    $('.stream-next:visible')
-                      .click();
+                    if (ignore.skip) {
+                      $('.stream-next:visible')
+                        .click();
+                    }
                   }
-                })
-              })
+                });
+              });
             }
           })
           .fail(function (err) {
